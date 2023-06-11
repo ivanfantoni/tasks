@@ -95,7 +95,7 @@ class App(customtkinter.CTk):
         except Exception:
             pass
         self.row_frm()
-        self.insert_row()
+        self.insert_row(object)
         self.__reset_btn_color(self.objects_buttons_frame, object)
         if button:
             button.configure(border_color='#00FFFF', text_color='#00FFFF', border_width=2, hover=False)
@@ -103,13 +103,14 @@ class App(customtkinter.CTk):
         total_price_text = 0.0
         for i, self.result in enumerate(self.results):
             if self.result.object == object:
-                total_price_text +=self.result.price
+                if self.result.price is not None:
+                    total_price_text +=self.result.price
                 self.row(i+1)
 
         self.total_price_frm(total_price=total_price_text)
 
 
-    def insert_row(self):
+    def insert_row(self, object):
         validation_command = self.register(self.__entry_limit)
 
         taskentry = customtkinter.StringVar()
@@ -122,7 +123,7 @@ class App(customtkinter.CTk):
         self.priceinsert.grid(row=0, column=1, padx=10, pady=10, sticky='we')
         self.priceinsert.configure(validate='key', validatecommand=(validation_command, "%P", 'price'))
 
-        buttoninsert = customtkinter.CTkButton(self.row_frame, text='Insert', command=lambda :self.insert(object=self.result.object, task=self.taskinsert.get(), price=self.priceinsert.get()))
+        buttoninsert = customtkinter.CTkButton(self.row_frame, text='Insert', command=lambda :self.insert(object=object, task=self.taskinsert.get(), price=self.priceinsert.get()))
         buttoninsert.grid(row=0, column=2, padx=10, pady=10, sticky='e')
 
 
@@ -213,8 +214,8 @@ class App(customtkinter.CTk):
 
     def insert(self, object, task, price):
 
-        if price.isnumeric():
-            price = price   
+        if Services().isfloat(price):
+            price = Services().floatpoint(price)
         else:
             price = 0
         insert_todo(Todo(object=object, task=task, price=price))
@@ -237,7 +238,7 @@ class App(customtkinter.CTk):
         if count == 0:
             self.objects_buttons_frame.destroy()
             self.objects_buttons_frm()
-        self.tasks_list(object)
+        self.tasks_list(self.results[0].object)
 
 
     def edit(self, id, task, price, object):
@@ -362,8 +363,8 @@ class EditWindow(customtkinter.CTkToplevel):
     def confirm_edit(self):
         if self.taskinsert.get() != self.task and self.taskinsert.get() != '':
             edit_task(self.id, self.taskinsert.get())
-        if self.priceinsert.get() != self.price and self.priceinsert.get().isnumeric():
-            edit_price(self.id, float(self.priceinsert.get()))
+        if self.priceinsert.get() != self.price and Services().isfloat(self.priceinsert.get()):
+            edit_price(self.id, Services().floatpoint(self.priceinsert.get()))
         app.results = get_all_todos()
         app.tasks_list(self.object)
 
@@ -441,8 +442,8 @@ class InsertNewObject(customtkinter.CTkToplevel):
 
 
     def insert_new(self):
-        if self.priceinsert.get().isnumeric():
-            price = self.priceinsert.get()
+        if Services().isfloat(self.priceinsert.get()):
+            price = Services().floatpoint(self.priceinsert.get())
         else:
             price = 0
         insert_todo(Todo(object=self.objectinsert.get(), task=self.taskinsert.get(), price=price))
@@ -467,6 +468,27 @@ class InsertNewObject(customtkinter.CTkToplevel):
             entry.configure(state='disabled')
         return True
            
+
+class Services:
+
+    def __init__(self):
+        pass
+
+
+    def isfloat(self, num:str):
+
+        num = num.replace(',', '.')
+        try:
+            num = float(num)
+            return True
+        except ValueError:
+            return False
+
+
+    def floatpoint(self, num:str):
+        num = num.replace(',', '.')
+        return num
+
 
 
 if __name__ == '__main__':
