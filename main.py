@@ -232,13 +232,14 @@ class App(customtkinter.CTk):
         self.results = get_all_todos()
         count = 0
         for result in self.results:
-            item = Todo(result)
-            if item.id == object:
+            if result.object == object:
                 count +=1
         if count == 0:
             self.objects_buttons_frame.destroy()
             self.objects_buttons_frm()
-        self.tasks_list(self.results[0].object)
+            self.tasks_list(self.results[0].object)
+        else:
+            self.tasks_list(object)
 
 
     def edit(self, id, task, price, object):
